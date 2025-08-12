@@ -17,6 +17,10 @@ The program will:
 2. Start an HTTP server on port `8080`.
 3. Start a DNS server on UDP port `53` that resolves `example.p2p` to `127.0.0.1`.
 
+Port `53` may already be in use or require elevated privileges. If the DNS server
+fails to start, a log message will be printed and `/etc/resolv.conf` will be
+restored.
+
 With the program running, you can reach the demo site:
 
 ```
@@ -29,4 +33,5 @@ The output should be:
 Hello from example.p2p:8080!
 ```
 
-Stop the program with `Ctrl+C` when finished.
+Stop the program with `Ctrl+C` when finished. The original `/etc/resolv.conf`
+is restored automatically on shutdown.
