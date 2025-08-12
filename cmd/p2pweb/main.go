@@ -1,14 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"strings"
 
 	"github.com/miekg/dns"
 )
 
-func handleRequest(w dns.ResponseWriter, r *dns.Msg) {
+func handleDNS(w dns.ResponseWriter, r *dns.Msg) {
 	m := new(dns.Msg)
 	m.SetReply(r)
 	m.Authoritative = true
@@ -28,13 +30,26 @@ func handleRequest(w dns.ResponseWriter, r *dns.Msg) {
 	}
 }
 
-func main() {
+func startDNSServer() error {
 	addr := "127.1.1.153:53"
-	dns.HandleFunc(".", handleRequest)
-
+	dns.HandleFunc(".", handleDNS)
 	server := &dns.Server{Addr: addr, Net: "udp"}
 	log.Printf("Starting DNS server on %s", addr)
-	if err := server.ListenAndServe(); err != nil {
-		log.Fatalf("failed to start server: %v", err)
-	}
+	return server.ListenAndServe()
+}
+
+func startWebServer() error {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello from %s\n", r.Host)
+	})
+	addr := ":8080"
+	log.Printf("Starting web server on %s", addr)
+	return http.ListenAndServe(addr, nil)
+}
+
+func main() {
+	errc := make(chan error, 2)
+	go func() { errc <- startDNSServer() }()
+	go func() { errc <- startWebServer() }()
+	log.Fatalf("server error: %v", <-errc)
 }

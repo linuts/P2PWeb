@@ -377,17 +377,12 @@ score = w1*ln(1 + distinct_publishers)
 
 This repository ships with a minimal DNS resolver and web server for experimenting with the `.p2p` special-use domain.
 
-1. Start the DNS server (binds to `127.1.1.153`):
+1. Start the combined demo server (DNS resolver and web server):
    ```sh
-   go run cmd/dnsserver/main.go
+   go run cmd/p2pweb/main.go
    ```
-2. Start the demo web server:
-   ```sh
-   go run cmd/webserver/main.go
-   ```
-3. Configure your operating system to use `127.1.1.153` as its DNS server (replace existing nameserver entries).
-4. Visit `http://example.p2p:8080` in a browser or:
+2. Configure your operating system to use `127.1.1.153` as its DNS server (replace existing nameserver entries).
+3. Visit `http://example.p2p:8080` in a browser or:
    ```sh
    curl http://example.p2p:8080
    ```
-
