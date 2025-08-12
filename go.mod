@@ -2,8 +2,9 @@ module p2pweb
 
 go 1.24.3
 
+require github.com/miekg/dns v1.1.55
+
 require (
-	github.com/miekg/dns v1.1.55 // indirect
 	golang.org/x/mod v0.7.0 // indirect
 	golang.org/x/net v0.2.0 // indirect
 	golang.org/x/sys v0.2.0 // indirect
