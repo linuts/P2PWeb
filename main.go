@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"os/signal"
 	"syscall"
 
@@ -56,23 +55,24 @@ func startWebServer(addr string) {
 	})
 	log.Printf("HTTP server listening on %s", addr)
 	if err := http.ListenAndServe(addr, nil); err != nil {
-		log.Fatalf("HTTP server failed: %v", err)
+		log.Printf("HTTP server failed: %v", err)
 	}
 }
 
-// configureResolver directs systemd-resolved to send .p2p lookups to the
-// demo DNS server on 127.0.0.1:5350. It returns a cleanup function that
-// restores the prior resolver settings.
+// configureResolver temporarily replaces /etc/resolv.conf so the host resolves
+// names through the local DNS server. It returns a cleanup function that
+// restores the original file.
 func configureResolver() (func(), error) {
-	if err := exec.Command("resolvectl", "dns", "lo", "127.0.0.1:5350").Run(); err != nil {
+	const path = "/etc/resolv.conf"
+	orig, err := os.ReadFile(path)
+	if err != nil {
 		return nil, err
 	}
-	if err := exec.Command("resolvectl", "domain", "lo", "~p2p").Run(); err != nil {
-		exec.Command("resolvectl", "revert", "lo").Run()
+	if err := os.WriteFile(path, []byte("nameserver 127.0.0.1\n"), 0644); err != nil {
 		return nil, err
 	}
 	return func() {
-		exec.Command("resolvectl", "revert", "lo").Run()
+		os.WriteFile(path, orig, 0644)
 	}, nil
 }
 
@@ -91,8 +91,8 @@ func main() {
 		os.Exit(0)
 	}()
 
-	go startWebServer(":80")
-	if err := startDNSServer(":5350"); err != nil {
-		log.Fatalf("DNS server failed: %v", err)
+	go startWebServer(":8080")
+	if err := startDNSServer(":53"); err != nil {
+		log.Printf("DNS server failed: %v", err)
 	}
 }
