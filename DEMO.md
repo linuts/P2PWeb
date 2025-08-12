@@ -7,7 +7,7 @@ This repository now includes a minimal Go program that runs:
 
 ## Running the demo
 
-Run as root so the program can bind to port 53:
+Run as root so the program can configure DNS and bind to port 80:
 
 ```sh
 sudo go run .
@@ -15,16 +15,15 @@ sudo go run .
 
 The program will:
 
-1. Start a DNS server on UDP port `53` that resolves `example.p2p` to `127.0.0.1`.
-2. Start an HTTP server on port `8080`.
-3. Replace `/etc/resolv.conf` so the host uses `127.0.0.1` for DNS, and restore
-   the original file when the program exits.
+1. Start a DNS server on UDP port `5350` that resolves `example.p2p` to `127.0.0.1`.
+2. Start an HTTP server on port `80`.
+3. Use `resolvectl` to direct `.p2p` lookups to `127.0.0.1#5350` and revert the change on exit.
 
 With the program running, you can reach the demo site:
 
 ```
 dig example.p2p +short
-curl --noproxy '*' http://example.p2p:8080/
+curl --noproxy '*' http://example.p2p/
 ```
 
 The output from `dig` should show:
