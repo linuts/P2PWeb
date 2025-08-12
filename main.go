@@ -57,8 +57,8 @@ func startWebServer(addr string) {
 }
 
 func main() {
-	go startWebServer(":80")
-	if err := startDNSServer(":5353"); err != nil {
-		log.Fatalf("DNS server failed: %v", err)
-	}
+        go startWebServer(":80")
+        if err := startDNSServer(":5350"); err != nil {
+                log.Fatalf("DNS server failed: %v", err)
+        }
 }
