@@ -66,8 +66,12 @@ func setLocalResolver() (func(), error) {
 }
 
 func startDNSServer(addr string) error {
-	server := &dns.Server{Addr: addr, Net: "udp", Handler: &p2pHandler{}}
-	log.Printf("DNS server listening on %s", addr)
+	server := &dns.Server{
+		Addr:              addr,
+		Net:               "udp",
+		Handler:           &p2pHandler{},
+		NotifyStartedFunc: func() { log.Printf("DNS server listening on %s", addr) },
+	}
 	return server.ListenAndServe()
 }
 

@@ -7,8 +7,10 @@ This repository now includes a minimal Go program that runs:
 
 ## Running the demo
 
-```
-go run .
+Run as root so the program can bind to port 53 and update `/etc/resolv.conf`:
+
+```sh
+sudo go run .
 ```
 
 The program will:
@@ -17,9 +19,16 @@ The program will:
 2. Start an HTTP server on port `8080`.
 3. Start a DNS server on UDP port `53` that resolves `example.p2p` to `127.0.0.1`.
 
-Port `53` may already be in use or require elevated privileges. If the DNS server
-fails to start, a log message will be printed and `/etc/resolv.conf` will be
-restored.
+Port `53` may already be in use or require elevated privileges. If a local DNS
+stub (e.g., `systemd-resolved` or NetworkManager's built-in resolver) is
+listening on that port, stop it temporarily:
+
+```sh
+sudo systemctl stop systemd-resolved
+```
+
+If the DNS server still fails to start, a log message will be printed and
+`/etc/resolv.conf` will be restored.
 
 With the program running, you can reach the demo site:
 
