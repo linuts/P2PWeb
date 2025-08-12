@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"html/template"
 	"log"
 	"net"
 	"net/http"
@@ -39,10 +39,38 @@ func startDNSServer() error {
 }
 
 func startWebServer() error {
+	tmpl := template.Must(template.New("dashboard").Parse(`<!DOCTYPE html>
+<html>
+<head><title>P2P Web Dashboard</title></head>
+<body>
+<h1>P2P Web Dashboard</h1>
+<ul>
+<li>Domain suffix: {{.DomainSuffix}}</li>
+<li>DNS server: {{.DNSServer}}</li>
+<li>Example domain: <a href="http://{{.ExampleDomain}}">{{.ExampleDomain}}</a></li>
+<li>Web server port: {{.WebPort}}</li>
+</ul>
+</body>
+</html>`))
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello from %s\n", r.Host)
+		data := struct {
+			DomainSuffix  string
+			DNSServer     string
+			ExampleDomain string
+			WebPort       string
+		}{
+			DomainSuffix:  ".p2p",
+			DNSServer:     "127.1.1.153:53",
+			ExampleDomain: "server.p2p",
+			WebPort:       "80",
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		if err := tmpl.Execute(w, data); err != nil {
+			log.Printf("failed to render template: %v", err)
+		}
 	})
-	addr := ":8080"
+	addr := ":80"
 	log.Printf("Starting web server on %s", addr)
 	return http.ListenAndServe(addr, nil)
 }
