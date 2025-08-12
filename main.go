@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/exec"
+	"os/signal"
+	"syscall"
 
 	"github.com/miekg/dns"
 )
@@ -56,9 +60,39 @@ func startWebServer(addr string) {
 	}
 }
 
+// configureResolver directs systemd-resolved to send .p2p lookups to the
+// demo DNS server on 127.0.0.1:5350. It returns a cleanup function that
+// restores the prior resolver settings.
+func configureResolver() (func(), error) {
+	if err := exec.Command("resolvectl", "dns", "lo", "127.0.0.1:5350").Run(); err != nil {
+		return nil, err
+	}
+	if err := exec.Command("resolvectl", "domain", "lo", "~p2p").Run(); err != nil {
+		exec.Command("resolvectl", "revert", "lo").Run()
+		return nil, err
+	}
+	return func() {
+		exec.Command("resolvectl", "revert", "lo").Run()
+	}, nil
+}
+
 func main() {
-        go startWebServer(":80")
-        if err := startDNSServer(":5350"); err != nil {
-                log.Fatalf("DNS server failed: %v", err)
-        }
+	cleanup, err := configureResolver()
+	if err != nil {
+		log.Fatalf("failed to configure resolver: %v", err)
+	}
+	defer cleanup()
+
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-sigCh
+		cleanup()
+		os.Exit(0)
+	}()
+
+	go startWebServer(":80")
+	if err := startDNSServer(":5350"); err != nil {
+		log.Fatalf("DNS server failed: %v", err)
+	}
 }

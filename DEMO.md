@@ -17,17 +17,21 @@ The program will:
 
 1. Start an HTTP server on port `80`.
 2. Start a DNS server on UDP port `5350` that resolves `example.p2p` to `127.0.0.1`.
+3. Configure `systemd-resolved` so queries for `.p2p` go to `127.0.0.1:5350` and
+   restore the previous resolver settings when the program exits.
 
-Because the DNS server listens on a nonstandard port, your system resolver can
-stay running. To use `.p2p` domains in a browser, point your DNS configuration to
-`127.0.0.1` on port `5350` (for example, with `systemd-resolved`:
+If you need to configure this manually, run:
 
 ```sh
 sudo resolvectl dns lo 127.0.0.1:5350
+sudo resolvectl domain lo '~p2p'
 ```
 
-Adjust the interface name as needed and restore your original settings when you
-are finished.
+Restore your original settings with:
+
+```sh
+sudo resolvectl revert lo
+```
 
 With the program running, you can reach the demo site:
 
